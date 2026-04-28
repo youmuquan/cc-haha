@@ -1,5 +1,21 @@
 import { feature } from 'bun:bundle';
 
+// Force-load .env from cwd, overriding any pre-existing system/Windows env vars
+try {
+  // @ts-ignore
+  const text = await Bun.file('.env').text();
+  for (const line of text.split('\n')) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith('#')) continue;
+    const eq = trimmed.indexOf('=');
+    if (eq === -1) continue;
+    const key = trimmed.slice(0, eq).trim();
+    const val = trimmed.slice(eq + 1).trim().replace(/^["']|["']$/g, '');
+    // @ts-ignore
+    process.env[key] = val;
+  }
+} catch {}
+
 // Bugfix for corepack auto-pinning, which adds yarnpkg to peoples' package.jsons
 // eslint-disable-next-line custom-rules/no-top-level-side-effects
 process.env.COREPACK_ENABLE_AUTO_PIN = '0';
